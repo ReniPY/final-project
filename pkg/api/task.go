@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -18,10 +19,8 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 		putTaskHandler(w, r)
 	case http.MethodDelete:
 		deleteTaskHandler(w, r)
-	case http.MethodPatch:
-		doneTaskHandler(w, r)
 	default:
-		http.NotFound(w, r)
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -30,9 +29,20 @@ func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		if err == sql.ErrNoRows {
+			// Если задача не найдена, устанавливаем статус 404 Not Found
+			w.WriteHeader(http.StatusNotFound)
+			writeJson(w, map[string]string{"error": "Задача не найдена"})
+		} else {
+			// Если другая ошибка, устанавливаем статус 500 Internal Server Error
+			w.WriteHeader(http.StatusInternalServerError)
+			writeJson(w, map[string]string{"error": "Ошибка сервера"})
+		}
 		return
 	}
+
+	// Если задача найдена, устанавливаем статус 200 OK
+	w.WriteHeader(http.StatusOK)
 	writeJson(w, task)
 }
 

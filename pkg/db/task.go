@@ -1,6 +1,8 @@
 package db
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Task struct {
 	ID      string `json:"id"`
@@ -45,11 +47,15 @@ func Tasks(limit int) ([]*Task, error) {
 		}
 
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return tasks, nil
 }
 
 func GetTask(id string) (*Task, error) {
-	var task Task
+	task := &Task{}
 
 	err := db.QueryRow("SELECT * FROM scheduler WHERE id=$1", id).Scan(&task.ID, &task.Date, &task.Comment, &task.Title, &task.Repeat)
 
@@ -57,7 +63,7 @@ func GetTask(id string) (*Task, error) {
 		return nil, err
 	}
 
-	return &task, nil
+	return task, nil
 }
 
 func UpdateTask(task *Task) error {

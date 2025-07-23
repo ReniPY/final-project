@@ -12,7 +12,10 @@ func Run() {
 
 	http.Handle("/", http.FileServer(http.Dir("./web")))
 
-	err := http.ListenAndServe(":7540", nil)
+	port := ":7540"
+	log.Printf("Сервер запущен на порту %s\n", port)
+
+	err := http.ListenAndServe(port, nil)
 	if err != nil {
 		log.Fatalf("Ошибка запуска сервера: %v", err)
 	}

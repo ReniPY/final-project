@@ -17,7 +17,6 @@ func afterNow(date, now time.Time) bool {
 }
 
 func NextDate(now time.Time, dstart string, repeat string) (string, error) {
-
 	date, err := time.Parse(DateFormat, dstart)
 	if err != nil {
 		return "", err
@@ -41,7 +40,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		return "", fmt.Errorf("Некорректный параметр repeat: '%s'", repeat)
 	default:
 		if parts[0] == "d" {
-			interval, _ := strconv.Atoi(parts[1])
+			interval, err := strconv.Atoi(parts[1])
 			if err != nil || interval <= 0 || interval > 400 {
 				return "", nil
 			}
@@ -58,15 +57,29 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 }
 
 func nextDayHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+		return
+	}
+
 	now := r.FormValue("now")
 	date := r.FormValue("date")
 	repeat := r.FormValue("repeat")
 
-	nowParsed, _ := time.Parse(DateFormat, now)
+	nowParsed, err := time.Parse(DateFormat, now)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	result, err := NextDate(nowParsed, date, repeat)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Write([]byte(result))
+
+	_, err = w.Write([]byte(result)) // Исправлено: добавили обработку ошибки
+	if err != nil {
+		http.Error(w, "Ошибка записи ответа", http.StatusInternalServerError)
+	}
 }

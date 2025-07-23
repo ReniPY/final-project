@@ -6,12 +6,14 @@ import (
 	"github.com/ReniPY/final-project/pkg/db"
 )
 
+const MaxTasksLimit = 50
+
 type TasksResp struct {
 	Tasks []*db.Task `json:"tasks"`
 }
 
 func tasksHandler(w http.ResponseWriter, r *http.Request) {
-	tasks, err := db.Tasks(50)
+	tasks, err := db.Tasks(MaxTasksLimit)
 	if err != nil {
 		writeJson(w, err)
 		return

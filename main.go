@@ -8,10 +8,12 @@ import (
 )
 
 func main() {
-	if err := db.Init("scheduler.db"); err != nil {
+	err := db.Init("scheduler.db")
+	if err != nil {
 		fmt.Println("Ошибка инициализации базы данных:", err)
 		return
 	}
+	defer db.Close()
 
 	server.Run()
 }
